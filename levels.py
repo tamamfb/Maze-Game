@@ -1,0 +1,88 @@
+# Level 1
+level_1 = [
+"XXXXXXXXXXXXXXXXXXXXXXXXX",
+"XP XXXXXXX          XXXXX",
+"X  XXXXXXX  XXXXXX  XXXXX",
+"X       XX  XXXXXX  XXXXX",
+"X   T   XX  XXX        XX",
+"XXXXXX  XX  XXX    T   XX",
+"XXXXXX  XX  XXXXXX  XXXXX",
+"XXXXXX  XX    XXXX  XXXXX",
+"X  XXX        XXXXZ XXXXX",
+"X  XXX  XXXXXXXXXXXXXXXXX",
+"X         XXXXXXXXXXXXXXX",
+"X    T           XXXXXXXX",
+"XXXXXXXXXXXX     XXXXX  X",
+"XXXXXXXXXXXXXXX  XXXXX  X",
+"XXX  XXXXXXXXXX         X",
+"XXX                     X",
+"XXX    T    XXXXXXXXXXXXX",
+"XXXXXXXXXX  XXXXXXXXXXXXX",
+"XXXXXXXXXX        T     X",
+"XXE  XXXXX              X",
+"XX   XXXXXXXXXXXXX  XXXXX",
+"XX     XXXXXXXXXXX  XXXXX",
+"XX          XXXX        X",
+"XXXX                    X",
+"XXXXXXXXXXXXXXXXXXXXXXXXX"
+]
+
+# Level 2
+level_2 = [
+"XXXXXXXXXXXXXXXXXXXXXXXXX",
+"XP     XXXXXX       XXXXX",
+"X  XX  XXXXXX  XXXX  XXXX",
+"X  XX     XX      X  XXXX",
+"X  XX  T  XX  XX  X    XX",
+"XX     XXXX  XX  XXXXXX X",
+"XX     XXXX      XX  XX X",
+"XXXXXX    XXXXXX XX  XX X",
+"XXXXXX  T     XX XX  XX X",
+"X    X XXXXXX  XX XX  XX ",
+"X  T    XXX       Z  XXXX",
+"XXXXX XXXXXXXXX  XXXXXX X",
+"XXXXX                 X X",
+"XX           XXX  XX  X X",
+"XX      XXXXXXXT  XX  X X",
+"XXXXXXX       XX  XX  X X",
+"XXXXXXXXXX  XXXX  XX  X X",
+"X   XXXXX   XXXX  XX  X X",
+"X T         XXXXXXXX  X X",
+"XXXXXX         XXXX Z    X",
+"XX   XXXXXXX  XXXXXXXXXXXX",
+"XX       XXXX   XXXXXXXE X",
+"XXXXX         T       X  X",
+"XXXXXXXX  XXXXXX         X",
+"XXXXXXXXXXXXXXXXXXXXXXXXXX"
+]
+
+# Level 3
+level_3 = [
+"XXXXXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXX  XXX         X  PX",
+"XXXXXX  XXX         XT  X",
+"XXXXX E XXXZ        X   X",
+"XXXXX   XXX  XXXXXXXX   X",
+"XXXX    XX   XXX      XXX",
+"XXXX  XXXX   XXX      XXX",
+"XXXX ZXXX    XXX XXXX XXX",
+"XXXX  XXX   XXX  XXXX XXX",
+"XXXXT XXXT XXXX  XXXX   X",
+"XXXX XXXXX XXX T   XX  XX",
+"XXXX XXXXX XXX     XXX  X",
+"XXXX   XXX XX     ZXXXX X",
+"XXXX    X  XX XXXX XXX  X",
+"XXXX       XX XXXX  XX XX",
+"X T      XXXX XXXX X X  X",
+"X XXXXXXXXX   XXXX   XX X",
+"X XXXXXXX     XXXX  X   X",
+"X          XX XXXX    XXX",
+"X         XXX XXXXXXXXXXX",
+"X         XXX  XXXXXXXXXX",
+"X  XXXX  XXXX  T      XXX",
+"XX XXXXXXXXXXXXXXXXXX XXX",
+"XX                    XX",
+"XXXXXXXXXXXXXXXXXXXXXXXXX"
+]
+
+levels = [level_1, level_2, level_3]

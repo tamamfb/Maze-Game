@@ -4,11 +4,23 @@ import random
 from collections import deque
 import time
 
-# Setup Screen
+# Import dari file terpisah
+from colors import COLOR_PLAYER, COLOR_ZOMBIE, COLOR_FOOD, COLOR_EXIT, COLOR_WALL
+from pen import Pen
+from player import Player
+from zombie import Zombie
+from food import Food
+from exit import Exit
+from levels import levels
+from utils import dijkstra, get_neighbors, move_zombie_towards_player
+from level_generator import generate_dynamic_level, generate_endless_levels
+from menu import Menu
+
+# Setup Screen dengan warna yang lebih menarik
 wn = turtle.Screen()
-wn.bgcolor("black")
-wn.title("Zombie Maze")
-wn.setup(700, 700)
+wn.bgcolor("black")  # Black background
+wn.title("🧟 Zombie Maze Game 🧟")
+wn.setup(800, 800)
 wn.tracer(0)
 
 # Register Shapes
@@ -18,200 +30,12 @@ turtle.register_shape("wall.gif")
 turtle.register_shape("food.gif")
 turtle.register_shape("exit.gif")
 
-# Pen Class
-class Pen(turtle.Turtle):
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.shape("square")
-        self.color("white")
-        self.penup()
-        self.speed(0)
-
-# Player Class
-class Player(turtle.Turtle):
-    def __init__(self):
-        turtle.Turtle.__init__(self)
-        self.shape("player.gif")
-        self.penup()
-        self.speed(0)
-        self.stamina = 40
-
-    def decrease_stamina(self):
-        if self.stamina > 0:
-            self.stamina -= 1
-        if self.stamina <= 0:
-            self.stamina = 0
-            game_over()  # Trigger game over when stamina reaches 0
-
-    def go_up(self):
-        if not game_over_flag and self.stamina > 0:
-            move_to_x = self.xcor()
-            move_to_y = self.ycor() + 24
-            if (move_to_x, move_to_y) not in walls:
-                self.goto(self.xcor(), self.ycor() + 24)
-                self.decrease_stamina()  # Reduce stamina when player moves
-
-    def go_down(self):
-        if not game_over_flag and self.stamina > 0:
-            move_to_x = self.xcor()
-            move_to_y = self.ycor() - 24
-            if (move_to_x, move_to_y) not in walls:
-                self.goto(self.xcor(), self.ycor() - 24)
-                self.decrease_stamina()  # Reduce stamina when player moves
-
-    def go_left(self):
-        if not game_over_flag and self.stamina > 0:
-            move_to_x = self.xcor() - 24
-            move_to_y = self.ycor()
-            if (move_to_x, move_to_y) not in walls:
-                self.goto(self.xcor() - 24, self.ycor())
-                self.decrease_stamina()  # Reduce stamina when player moves
-
-    def go_right(self):
-        if not game_over_flag and self.stamina > 0:
-            move_to_x = self.xcor() + 24
-            move_to_y = self.ycor() 
-            if (move_to_x, move_to_y) not in walls:
-                self.goto(self.xcor() + 24, self.ycor())
-                self.decrease_stamina()  # Reduce stamina when player moves
-
-    def is_collision(self, other):
-        a = self.xcor() - other.xcor()
-        b = self.ycor() - other.ycor()
-        distance = math.sqrt((a ** 2) + (b ** 2))
-
-        if distance < 5:
-            return True
-        else:
-            return False
-
-# Food Class
-class Food(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        self.shape("food.gif")
-        self.penup()
-        self.speed(0)
-        self.goto(x, y)
-
-    def destroy(self):
-        self.goto(2000, 2000)  # Move off-screen
-        self.hideturtle()
-
-# Zombie Class
-class Zombie(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        self.shape("zombie.gif")
-        self.penup()
-        self.speed(0)
-        self.goto(x, y)
-
-# Exit Class
-class Exit(turtle.Turtle):
-    def __init__(self, x, y):
-        turtle.Turtle.__init__(self)
-        self.shape("exit.gif")
-        self.penup()
-        self.speed(0)
-        self.goto(x, y)
-
-# Levels list
-levels = []
-
-# First level
-level_1 = [
-"XXXXXXXXXXXXXXXXXXXXXXXXX",
-"XP XXXXXXX          XXXXX",
-"X  XXXXXXX  XXXXXX  XXXXX",
-"X       XX  XXXXXX  XXXXX",
-"X   T   XX  XXX        XX",
-"XXXXXX  XX  XXX    T   XX",
-"XXXXXX  XX  XXXXXX  XXXXX",
-"XXXXXX  XX    XXXX  XXXXX",
-"X  XXX        XXXXZ XXXXX",
-"X  XXX  XXXXXXXXXXXXXXXXX",
-"X         XXXXXXXXXXXXXXX",
-"X    T           XXXXXXXX",
-"XXXXXXXXXXXX     XXXXX  X",
-"XXXXXXXXXXXXXXX  XXXXX  X",
-"XXX  XXXXXXXXXX         X",
-"XXX                     X",
-"XXX    T    XXXXXXXXXXXXX",
-"XXXXXXXXXX  XXXXXXXXXXXXX",
-"XXXXXXXXXX        T     X",
-"XXE  XXXXX              X",
-"XX   XXXXXXXXXXXXX  XXXXX",
-"XX     XXXXXXXXXXX  XXXXX",
-"XX          XXXX        X",
-"XXXX                    X",
-"XXXXXXXXXXXXXXXXXXXXXXXXX"
-]
-
-level_2 = [
-"XXXXXXXXXXXXXXXXXXXXXXXXX",
-"XP     XXXXXX       XXXXX",
-"X  XX  XXXXXX  XXXX  XXXX",
-"X  XX     XX      X  XXXX",
-"X  XX  T  XX  XX  X    XX",
-"XX     XXXX  XX  XXXXXX X",
-"XX     XXXX      XX  XX X",
-"XXXXXX    XXXXXX XX  XX X",
-"XXXXXX  T     XX XX  XX X",
-"X    X XXXXXX  XX XX  XX ",
-"X  T    XXX       Z  XXXX",
-"XXXXX XXXXXXXXX  XXXXXX X",
-"XXXXX                 X X",
-"XX           XXX  XX  X X",
-"XX      XXXXXXXT  XX  X X",
-"XXXXXXX       XX  XX  X X",
-"XXXXXXXXXX  XXXX  XX  X X",
-"X   XXXXX   XXXX  XX  X X",
-"X T         XXXXXXXX  X X",
-"XXXXXX         XXXX Z    X",
-"XX   XXXXXXX  XXXXXXXXXXXX",
-"XX       XXXX   XXXXXXXE X",
-"XXXXX         T       X  X",
-"XXXXXXXX  XXXXXX         X",
-"XXXXXXXXXXXXXXXXXXXXXXXXXX"
-]
-
-level_3 = [
-"XXXXXXXXXXXXXXXXXXXXXXXXX",
-"XXXXXX  XXX         X  PX",
-"XXXXXX  XXX         XT  X",
-"XXXXX E XXXZ        X   X",
-"XXXXX   XXX  XXXXXXXX   X",
-"XXXX    XX   XXX      XXX",
-"XXXX  XXXX   XXX      XXX",
-"XXXX ZXXX    XXX XXXX XXX",
-"XXXX  XXX   XXX  XXXX XXX",
-"XXXXT XXXT XXXX  XXXX   X",
-"XXXX XXXXX XXX T   XX  XX",
-"XXXX XXXXX XXX     XXX  X",
-"XXXX   XXX XX     ZXXXX X",
-"XXXX    X  XX XXXX XXX  X",
-"XXXX       XX XXXX  XX XX",
-"X T      XXXX XXXX X X  X",
-"X XXXXXXXXX   XXXX   XX X",
-"X XXXXXXX     XXXX  X   X",
-"X          XX XXXX    XXX",
-"X         XXX XXXXXXXXXXX",
-"X         XXX  XXXXXXXXXX",
-"X  XXXX  XXXX  T      XXX",
-"XX XXXXXXXXXXXXXXXXXX XXX",
-"XX                       ", # make this walls
-"XXXXXXXXXXXXXXXXXXXXXXXXX" # make this tunnel
-]
-
-
-
-levels.append(level_1)
-levels.append(level_2)
-levels.append(level_3)
-
-# Maze Setup
-def setup_maze(level):
+# Maze Setup - dengan clearing yang lebih baik
+def setup_maze(level, level_index=0):
+    # Clear semua stamps dan drawings sebelumnya
+    pen.clear()
+    pen.hideturtle()
+    
     for y in range(len(level)):
         for x in range(len(level[y])):
             character = level[y][x]
@@ -231,10 +55,15 @@ def setup_maze(level):
                 foods.append(Food(screen_x, screen_y))
 
             if character == "Z":
-                zombies.append(Zombie(screen_x, screen_y))
+                # Difficulty scales with level
+                if endless_mode:
+                    difficulty = min(3, 1 + (endless_level_num // 3))  # Scale with wave
+                else:
+                    difficulty = level_index + 1  # Difficulty 1, 2, 3
+                zombies.append(Zombie(screen_x, screen_y, difficulty))
 
             if character == "E":
-                exits.append(Exit(screen_x, screen_y))  
+                exits.append(Exit(screen_x, screen_y))
 
 # Initialize Pen, Player, Walls, Foods, Zombies, Exits
 pen = Pen()
@@ -243,263 +72,455 @@ walls = []
 foods = []
 zombies = []
 exits = []
+current_level = 0
+is_paused = False
+pause_display = None
+
+# Endless Mode Variables
+endless_mode = False
+endless_level_num = 1
+endless_generated_levels = []
+
+# Menu system
+main_menu = None
+menu_active = False
 
 
-# Stamina Display
-stamina_display = Pen()
-stamina_display.goto(0, 310)
-stamina_display.color("yellow")
-stamina_display.hideturtle()
+# Stamina Display dengan visual bar - created lazily
+stamina_display = None
+info_display = None
+HUD_TEXT_Y = 330
+HUD_SCORE_X = -320
+HUD_HP_X = 320
+STAMINA_BAR_X = 170
+STAMINA_BAR_Y = 322
+STAMINA_BAR_WIDTH = 120
+STAMINA_BAR_HEIGHT = 18
+
+def init_displays():
+    global stamina_display, info_display
+    if stamina_display is None:
+        stamina_display = Pen()
+        stamina_display.color("yellow")
+    if info_display is None:
+        info_display = Pen()
+        info_display.color("cyan")
 
 def update_stamina_display():
-    stamina_display.clear()  # Clear previous stamina display
-    stamina_display.write("Stamina: {}".format(player.stamina), align="center", font=("Arial", 18, "normal"))
+    if stamina_display is None:
+        return
+    try:
+        stamina_display.clear()
+    except:
+        pass
+    
+    # Draw stamina bar background
+    stamina_display.penup()
+    stamina_display.setheading(0)
+    stamina_display.goto(STAMINA_BAR_X, STAMINA_BAR_Y)
+    stamina_display.pendown()
+    stamina_display.pensize(2)
+    stamina_display.color("gray")
+    
+    # Bar background (60 unit width = full stamina)
+    for _ in range(2):
+        stamina_display.forward(STAMINA_BAR_WIDTH)
+        stamina_display.right(90)
+        stamina_display.forward(STAMINA_BAR_HEIGHT)
+        stamina_display.right(90)
+    
+    # Draw stamina bar fill
+    stamina_display.penup()
+    stamina_display.setheading(0)
+    stamina_display.goto(STAMINA_BAR_X, STAMINA_BAR_Y)
+    stamina_display.pendown()
+    stamina_display.pensize(2)
+    
+    # Color based on stamina level
+    if player.stamina > 30:
+        stamina_display.color("lime")  # Green
+    elif player.stamina > 15:
+        stamina_display.color("gold")  # Yellow
+    else:
+        stamina_display.color("red")  # Red
+    
+    # Bar fill width = stamina * 2 pixels per point
+    bar_width = (player.stamina / player.max_stamina) * STAMINA_BAR_WIDTH
+    for _ in range(2):
+        stamina_display.forward(bar_width)
+        stamina_display.right(90)
+        stamina_display.forward(STAMINA_BAR_HEIGHT)
+        stamina_display.right(90)
+    
+    # Draw HP label on the same baseline as the score.
+    stamina_display.penup()
+    stamina_display.goto(HUD_HP_X, HUD_TEXT_Y)
+    stamina_display.color("white")
+    stamina_display.write("HP: {}/{}".format(player.stamina, player.max_stamina), 
+                          align="right", font=("Arial", 12, "bold"))
+
+def update_info_display():
+    if info_display is None:
+        return
+    try:
+        info_display.clear()
+    except:
+        pass
+    info_display.color("cyan")
+    info_display.penup()
+    info_display.goto(HUD_SCORE_X, HUD_TEXT_Y)
+    if endless_mode:
+        info_display.write("🌀 Wave: {} | Score: {}".format(endless_level_num, player.score), align="left", font=("Arial", 12, "normal"))
+    else:
+        info_display.write("Score: {}".format(player.score), align="left", font=("Arial", 12, "normal"))
 
 # Game Over Flag
 game_over_flag = False
 
 # Game Over Screen with Win Condition
 def game_over(won=False):
-    global game_over_flag
+    global game_over_flag, endless_mode, endless_level_num
+    
+    # Endless mode: auto-load next level when winning
+    if won and endless_mode:
+        endless_level_num += 1
+        start_game(-1)  # -1 indicates endless mode
+        return
+    
     game_over_flag = True
 
-    # Hide player, zombies, foods, walls, exits, and stamina display
+    # Hide everything
     player.hideturtle()
     for food in foods:
         food.hideturtle()
     for zombie in zombies:
         zombie.hideturtle()
-    for wall in walls:
-        pen.goto(wall)
-        pen.shape("square")
-        pen.hideturtle()
     for exit_point in exits:
-        exit_point.hideturtle()  # Hide each exit point
-    stamina_display.hideturtle()
+        exit_point.hideturtle()
+    if stamina_display:
+        stamina_display.hideturtle()
+    if info_display:
+        info_display.hideturtle()
 
-    # Display "GAME OVER" or "YOU WIN" message
-    pen.clear()  # Clear previous screen before writing messages
-    pen.goto(0, 0)
+    # Create semi-transparent overlay effect with multiple rectangles
+    overlay = Pen()
+    overlay.goto(0, 0)
+    overlay.color("black")
+    overlay.pendown()
+    overlay.pensize(1)
+    for _ in range(2):
+        overlay.forward(400)
+        overlay.right(90)
+        overlay.forward(400)
+        overlay.right(90)
+    overlay.hideturtle()
+
+    # Display message
+    pen.clear()
+    pen.goto(0, 50)
 
     if won:
-        pen.color("green")
-        pen.write("YOU WIN", align="center", font=("Arial", 24, "normal"))
+        pen.color(COLOR_EXIT)
+        pen.write("🎉 YOU WIN! 🎉", align="center", font=("Arial", 32, "bold"))
+        pen.goto(0, 0)
+        pen.color("lime")
+        pen.write("Final Score: {}".format(player.score), align="center", font=("Arial", 18, "normal"))
     else:
         pen.color("red")
-        pen.write("GAME OVER", align="center", font=("Arial", 24, "normal"))
+        pen.write("💀 GAME OVER 💀", align="center", font=("Arial", 32, "bold"))
+        pen.goto(0, 0)
+        pen.color("gold")
+        pen.write("Score: {}".format(player.score), align="center", font=("Arial", 18, "normal"))
 
-    # Display Restart and Quit options
-    pen.goto(0, -50)
-    pen.color("yellow")
-    pen.write("Press M for Menu", align="center", font=("Arial", 18, "normal"))
+    # Display options
+    pen.goto(0, -60)
+    pen.color("white")
+    pen.write("Press M for Menu", align="center", font=("Arial", 16, "normal"))
 
-    pen.goto(0, -80)
-    pen.color("yellow")
-    pen.write("Press Q to Quit", align="center", font=("Arial", 18, "normal"))
+    pen.goto(0, -100)
+    pen.color("white")
+    pen.write("Press Q to Quit", align="center", font=("Arial", 16, "normal"))
 
 # Add Exit Collision Logic
 def check_exit_collision():
-    for exit_point in exits:  # Use the correct list for exits
+    for exit_point in exits:
         if player.is_collision(exit_point):
-            game_over(won=True)  # Trigger win condition when player touches exit
+            game_over(won=True)
 
-# Hitamkan layarnya
+# Pause/Resume game
+def toggle_pause():
+    global is_paused, pause_display
+    is_paused = not is_paused
+    
+    if pause_display is None:
+        pause_display = Pen()
+    
+    if is_paused:
+        pause_display.goto(0, 0)
+        pause_display.color(COLOR_EXIT)
+        pause_display.write("|| PAUSED ||", align="center", font=("Arial", 24, "bold"))
+    else:
+        pause_display.clear()
+
+# Clear screen function
 def clear_screen():
-    # Create a large black rectangle to cover everything
-    pen.clear()  # Clear any prior elements drawn by the pen
-    pen.color("black")
-    pen.goto(0, 0)
-    pen.begin_fill()
-    for _ in range(2):
-        pen.forward(350)
-        pen.left(90)
-        pen.forward(350)
-        pen.left(90)
-    pen.end_fill()
+    pen.clear()
     pen.hideturtle()
+    pen.penup()
 
-# Show Menu
+# Show Menu dengan visual yang lebih bagus
 def show_menu():
-    global game_over_flag  # To reset the game state when restarting from the menu
-    game_over_flag = True  # Prevent game logic from running while in the menu
+    global game_over_flag, is_paused, walls, foods, zombies, exits, main_menu, menu_active
+    game_over_flag = True
+    is_paused = False
+    menu_active = True
 
-    clear_screen()
-
-    pen.clear()
-    pen.color("yellow")
-    pen.goto(0, 100)
-    pen.write("Zombie Maze Game", align="center", font=("Arial", 24, "bold"))
-
-    pen.goto(0, 50)
-    pen.write("Press 1 for Level 1", align="center", font=("Arial", 18, "normal"))
-
-    pen.goto(0, 20)
-    pen.write("Press 2 for Level 2", align="center", font=("Arial", 18, "normal"))
-
-    pen.goto(0, -10)
-    pen.write("Press 3 for Level 3", align="center", font=("Arial", 18, "normal"))
-
-    pen.goto(0, -50)
-    pen.write("Press Q to Quit", align="center", font=("Arial", 18, "normal"))
-
-    wn.listen()
-    wn.onkeypress(lambda: start_game(0), "1")  # Start Level 1
-    wn.onkeypress(lambda: start_game(1), "2")  # Start Level 2
-    wn.onkeypress(lambda: start_game(2), "3")  # Start Level 3
-    wn.onkeypress(close_game, "q")  # Quit the game
-
-# Restart the Game [DEPRECATED]
-def restart_game():
-    global game_over_flag
-    game_over_flag = False
-
-    # Hide the restart and quit options
-    pen.clear()
-
-    # Reset game state
-    player.goto(-288, 288)
-    player.showturtle()
-    player.stamina = 40
-
-    # Re-initialize foods, zombies, walls, and exits
-    global foods, zombies, walls, exits
+    # Clear dan hide semua game objects
+    player.hideturtle()
+    for food in foods:
+        food.hideturtle()
+    for zombie in zombies:
+        zombie.hideturtle()
+    for exit_point in exits:
+        exit_point.hideturtle()
+    if stamina_display:
+        stamina_display.hideturtle()
+    if info_display:
+        info_display.hideturtle()
+    
+    # Reset lists untuk clean state
+    walls.clear()
     foods.clear()
     zombies.clear()
-    walls.clear()
-    exits.clear()  # Clear existing exits
+    exits.clear()
+    
+    # Reset background
+    wn.bgcolor("black")
+    pen.clear()
+    pen.penup()
+    pen.hideturtle()
 
-    setup_maze(levels[2])  # Recreate the maze SAMA INII
-    update_stamina_display()
+    # Create menu
+    main_menu = Menu(wn)
+    main_menu.draw_title("🧟 ZOMBIE MAZE GAME 🧟")
+    
+    # Add menu items
+    main_menu.add_item(0, 60, "Level 1 (Easy)", COLOR_PLAYER, select_level_1)
+    main_menu.add_item(0, 5, "Level 2 (Medium)", COLOR_PLAYER, select_level_2)
+    main_menu.add_item(0, -50, "Level 3 (Hard)", COLOR_PLAYER, select_level_3)
+    main_menu.add_item(0, -105, "🌀 Endless Mode", "cyan", select_endless_mode)
+    
+    main_menu.select_first()
+    main_menu.draw()
+    main_menu.draw_footer("Use UP/DOWN to navigate | ENTER Select | Q Quit")
 
 # Close the Game
 def close_game():
     wn.bye()
 
-# Keyboard Bindings
+# Level selection wrappers - hanya bekerja saat game over
+def select_level_1():
+    start_game(0)
+
+def select_level_2():
+    start_game(1)
+
+def select_level_3():
+    start_game(2)
+
+def select_endless_mode():
+    start_game(-1)  # -1 indicates endless mode
+
+# Menu navigation
+def menu_up():
+    global main_menu, menu_active
+    if menu_active and main_menu:
+        main_menu.select_prev()
+
+def menu_down():
+    global main_menu, menu_active
+    if menu_active and main_menu:
+        main_menu.select_next()
+
+def menu_select():
+    global main_menu, menu_active
+    if menu_active and main_menu:
+        main_menu.click_selected()
+
+# Wrapper functions untuk player movement
+def player_go_left():
+    if not game_over_flag and player.stamina > 0 and not is_paused:
+        move_to_x = player.xcor() - 24
+        move_to_y = player.ycor()
+        if (move_to_x, move_to_y) not in walls:
+            player.goto(player.xcor() - 24, player.ycor())
+            player.decrease_stamina()
+
+def player_go_right():
+    if not game_over_flag and player.stamina > 0 and not is_paused:
+        move_to_x = player.xcor() + 24
+        move_to_y = player.ycor()
+        if (move_to_x, move_to_y) not in walls:
+            player.goto(player.xcor() + 24, player.ycor())
+            player.decrease_stamina()
+
+def player_go_up():
+    if menu_active:
+        menu_up()
+    elif not game_over_flag and player.stamina > 0 and not is_paused:
+        move_to_x = player.xcor()
+        move_to_y = player.ycor() + 24
+        if (move_to_x, move_to_y) not in walls:
+            player.goto(player.xcor(), player.ycor() + 24)
+            player.decrease_stamina()
+
+def player_go_down():
+    if menu_active:
+        menu_down()
+    elif not game_over_flag and player.stamina > 0 and not is_paused:
+        move_to_x = player.xcor()
+        move_to_y = player.ycor() - 24
+        if (move_to_x, move_to_y) not in walls:
+            player.goto(player.xcor(), player.ycor() - 24)
+            player.decrease_stamina()
+
+# Keyboard Bindings - setup awal
 wn.listen()
-wn.onkeypress(player.go_left, "Left")
-wn.onkeypress(player.go_right, "Right")
-wn.onkeypress(player.go_up, "Up")
-wn.onkeypress(player.go_down, "Down")
+wn.onkeypress(player_go_left, "Left")
+wn.onkeypress(player_go_right, "Right")
+wn.onkeypress(player_go_up, "Up")
+wn.onkeypress(player_go_down, "Down")
+wn.onkeypress(menu_select, "Return")
+wn.onkeypress(select_level_1, "1")
+wn.onkeypress(select_level_2, "2")
+wn.onkeypress(select_level_3, "3")
+wn.onkeypress(select_endless_mode, "e")
 wn.onkeypress(show_menu, "m")
+wn.onkeypress(toggle_pause, "p")
 wn.onkeypress(close_game, "q")
 
 # Calculate Neighbors for Dijkstra
-def get_neighbors(position, walls):
-    x, y = position
-    neighbors = [
-        (x + 24, y),  # Right
-        (x - 24, y),  # Left
-        (x, y + 24),  # Up
-        (x, y - 24)   # Down
-    ]
-    valid_neighbors = []
-    for nx, ny in neighbors:
-        if (nx, ny) not in walls:
-            valid_neighbors.append((nx, ny))
-    return valid_neighbors
-
-# Dijkstra Algorithm to find shortest path
-def dijkstra(start, goal, walls):
-    queue = deque([(start, [start])])  # Queue contains (position, path)
-    visited = set()
-
-    while queue:
-        current, path = queue.popleft()
-
-        if current == goal:
-            return path  # Return the path when we reach the goal
-
-        if current in visited:
-            continue
-        visited.add(current)
-
-        for neighbor in get_neighbors(current, walls):
-            if neighbor not in visited:
-                new_path = path + [neighbor]
-                queue.append((neighbor, new_path))
-
-    return []  # Return empty path if no path is found
-
-# Move zombie towards player
-def move_zombie_towards_player(zombie, player, walls):
-    start = (zombie.xcor(), zombie.ycor())
-    goal = (player.xcor(), player.ycor())
-
-    path = dijkstra(start, goal, walls)
-
-    if path and len(path) > 1:
-        next_position = path[1]  # Zombie follows the path found
-        zombie.goto(next_position[0], next_position[1])
-
 # Initialize Frame Counter
 frame_count = 0
-zombie_move_interval = 10  # Adjust this value to control zombie speed
 
 def start_game(level_index):
-    global game_over_flag
+    global game_over_flag, current_level, is_paused, endless_mode, endless_level_num, endless_generated_levels
+    global walls, foods, zombies, exits, menu_active
     game_over_flag = False
+    is_paused = False
+    menu_active = False
+    
+    # Endless mode
+    if level_index == -1:
+        endless_mode = True
+        # Generate first batch of levels if not already generated
+        if not endless_generated_levels:
+            endless_generated_levels = generate_endless_levels(1, 20)
+        
+        # Get level from generated levels, generate more if needed
+        if endless_level_num > len(endless_generated_levels):
+            endless_generated_levels.extend(generate_endless_levels(endless_level_num, 5))
+        
+        current_level = endless_level_num - 1
+        level_data = endless_generated_levels[current_level]
+    else:
+        # Standard mode
+        endless_mode = False
+        current_level = level_index
+        level_data = levels[level_index]
 
-    # Hide the menu
+    # Clean up menu if it exists
+    if main_menu:
+        main_menu.cleanup()
+    
+    # Initialize displays
+    init_displays()
+
+    # Set background dan clear screen
+    wn.bgcolor("black")
     pen.clear()
+    pen.penup()
+    pen.hideturtle()
+    
+    # Hide semua objects dari level sebelumnya
+    player.hideturtle()
+    for food in foods:
+        food.hideturtle()
+    for zombie in zombies:
+        zombie.hideturtle()
+    for exit_point in exits:
+        exit_point.hideturtle()
+    
+    pen.clear()
+    pen.penup()
+    pen.hideturtle()
 
     # Reset player, walls, foods, zombies, and exits
-    player.goto(-288, 288)  # Reset player to default position
-    player.stamina = 40
+    player.goto(-288, 288)
+    player.stamina = 60
+    player.max_stamina = 60
+    player.score = 0
+    player.collected_foods = 0
     player.showturtle()
-
-    global walls, foods, zombies, exits
+    
     walls.clear()
     foods.clear()
     zombies.clear()
     exits.clear()
 
-    setup_maze(levels[level_index])  # Set up the selected level
-    update_stamina_display()  # Update stamina display
-
-    # Listen for gameplay inputs
-    wn.listen()
-    wn.onkeypress(player.go_left, "Left")
-    wn.onkeypress(player.go_right, "Right")
-    wn.onkeypress(player.go_up, "Up")
-    wn.onkeypress(player.go_down, "Down")
-    wn.onkeypress(close_game, "q")
-    wn.onkeypress(show_menu, "m")
+    setup_maze(level_data, current_level)
+    
+    # Don't update displays yet - let main loop handle it
+    # to avoid turtle state issues
 
 
 show_menu()
 
 # Main Game Loop
 while True:
-    if not game_over_flag:
-        for food in foods[:]:  # Iterate over a copy of the list
+    if not game_over_flag and not is_paused:
+        # Food collision
+        for food in foods[:]:
             if player.is_collision(food):
-                player.stamina += 10  # Increase stamina when eating food
-                print("Player Stamina: {}".format(player.stamina))
+                if food.food_type == "bonus":
+                    player.add_stamina(20)
+                else:
+                    player.add_stamina(10)
+                player.collected_foods += 1
                 food.destroy()
                 foods.remove(food)
 
-        for zombie in zombies:  # Collision with zombies (as enemies)
+        # Zombie collision
+        for zombie in zombies:
             if player.is_collision(zombie):
-                print("Player dies!")
-                game_over()  # Trigger game over when collision with zombie
+                game_over()
 
-        # Check for exit collision (win condition)
+        # Check exit collision (win condition)
         check_exit_collision()
 
-        # Update stamina display
+        # Check if stamina is 0 (lose condition)
+        if player.stamina <= 0:
+            game_over(won=False)
+
+        # Update displays
         update_stamina_display()
+        update_info_display()
 
         # Increment frame counter
         frame_count += 1
 
-        # Move zombies at specified intervals
-        if frame_count % zombie_move_interval == 0:
-            for zombie in zombies:
+        # Move zombies dengan difficulty scaling
+        for zombie in zombies:
+            zombie_interval = zombie.get_speed()
+            if frame_count % zombie_interval == 0:
                 move_zombie_towards_player(zombie, player, walls)
 
     # Update the screen
-    wn.update()
+    try:
+        wn.update()
+    except (turtle.Terminator, AttributeError):
+        # Handle window closure gracefully
+        break
 
     # Add a small delay to control the overall game speed
-    time.sleep(0.01)  # Adjust as needed
+    time.sleep(0.01)
