@@ -19,7 +19,7 @@ from menu import Menu
 # Setup Screen dengan warna yang lebih menarik
 wn = turtle.Screen()
 wn.bgcolor("black")  # Black background
-wn.title("🧟 Zombie Maze Game 🧟")
+wn.title("🧟 Zombie Maze Runner 🧟")
 wn.setup(800, 800)
 wn.tracer(0)
 
