@@ -5,7 +5,7 @@ from colors import COLOR_ZOMBIE
 class Zombie(turtle.Turtle):
     def __init__(self, x, y, difficulty=1):
         turtle.Turtle.__init__(self)
-        self.shape("zombie.gif")
+        self.shape("assets/zombie.gif")
         self.penup()
         self.speed(0)
         self.goto(x, y)

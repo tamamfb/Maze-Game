@@ -24,7 +24,7 @@ class Pen(turtle.Turtle):
 class Player(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
-        self.shape("player.gif")
+        self.shape("assets/player.gif")
         self.penup()
         self.speed(0)
         self.stamina = 60
@@ -67,7 +67,7 @@ class Player(turtle.Turtle):
 class Food(turtle.Turtle):
     def __init__(self, x, y):
         turtle.Turtle.__init__(self)
-        self.shape("food.gif")
+        self.shape("assets/food.gif")
         self.penup()
         self.speed(0)
         self.goto(x, y)
@@ -101,7 +101,7 @@ class PowerUp(turtle.Turtle):
 class Zombie(turtle.Turtle):
     def __init__(self, x, y, difficulty=1):
         turtle.Turtle.__init__(self)
-        self.shape("zombie.gif")
+        self.shape("assets/zombie.gif")
         self.penup()
         self.speed(0)
         self.goto(x, y)
@@ -120,7 +120,7 @@ class Zombie(turtle.Turtle):
 class Exit(turtle.Turtle):
     def __init__(self, x, y):
         turtle.Turtle.__init__(self)
-        self.shape("exit.gif")
+        self.shape("assets/exit.gif")
         self.penup()
         self.speed(0)
         self.goto(x, y)

@@ -24,11 +24,11 @@ wn.setup(800, 800)
 wn.tracer(0)
 
 # Register Shapes
-turtle.register_shape("player.gif")
-turtle.register_shape("zombie.gif")
-turtle.register_shape("wall.gif")
-turtle.register_shape("food.gif")
-turtle.register_shape("exit.gif")
+turtle.register_shape("assets/player.gif")
+turtle.register_shape("assets/zombie.gif")
+turtle.register_shape("assets/wall.gif")
+turtle.register_shape("assets/food.gif")
+turtle.register_shape("assets/exit.gif")
 
 # Maze Setup - dengan clearing yang lebih baik
 def setup_maze(level, level_index=0):
@@ -44,7 +44,7 @@ def setup_maze(level, level_index=0):
             screen_y = 288 - (y * 24)
             if character == "X":
                 pen.goto(screen_x, screen_y)
-                pen.shape("wall.gif")
+                pen.shape("assets/wall.gif")
                 pen.stamp()
                 walls.append((screen_x, screen_y))
 

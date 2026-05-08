@@ -5,7 +5,7 @@ import math
 class Player(turtle.Turtle):
     def __init__(self):
         turtle.Turtle.__init__(self)
-        self.shape("player.gif")
+        self.shape("assets/player.gif")
         self.penup()
         self.speed(0)
         self.stamina = 60
