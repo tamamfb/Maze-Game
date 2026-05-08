@@ -4,7 +4,6 @@ import random
 from collections import deque
 import time
 
-# Import dari file terpisah
 from colors import COLOR_PLAYER, COLOR_ZOMBIE, COLOR_FOOD, COLOR_EXIT, COLOR_WALL
 from pen import Pen
 from player import Player
